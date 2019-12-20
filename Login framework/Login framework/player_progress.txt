@@ -1,4 +1,5 @@
-ewic 0 2
+ewic 0 0
 edawg 7 1
 tester 5 1
 lil_weezy 9 0
+givemeaname 0 1

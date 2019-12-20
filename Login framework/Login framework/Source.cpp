@@ -1,15 +1,20 @@
-//THIS IS THE MAIN WHERE THE ACTUAL PROGRAM WOULD BE
-//THE HEADER WILL BE WHERE THE SIGN ON GOES
-#include <iostream>
+//Eric Brown programming project
+//
+//If trying this program for the first time, create an accout with the Login part
+//Then proceed to try the riddle game out
+//You can quit the program then restart it and login with the same username/password to save riddles progress
+//Reach the last level of the riddles and you will have the option to prestige
+//prestiging changes the color of the text
 
+
+//THIS IS THE MAIN WHERE THE ACTUAL PROGRAM WOULD BE
+//THE HEADER WILL BE WHERE THE SIGN ON/GAME GOES
+#include <iostream>
 #include "login.h"
 #include "RiddleGame.h"
 #include <Windows.h>
 
 using namespace std;
-
-void CenterString(string s); //prints the string argument centered
-
 
 int main() {
 	string username = LoginIntro();
@@ -17,8 +22,6 @@ int main() {
 	if (username != "q") { //quitting the program if username = q
 		Game(username);
 	}
-
-	//make some qquick easy bs game or basic final idea
 }
 
 

@@ -311,7 +311,12 @@ void DisplayGame(stats player) {
 		cout << k << " I want to be nice today!" << endl;
 	} */
 
-	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), player.prestige);
+	if (player.prestige == 0) {
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+	}
+	else {
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), player.prestige);
+	}
 
 	string welcome = "Welcome " + player.username; //change color to simulate prestige!
 
@@ -335,7 +340,13 @@ void DisplayGame(stats player) {
 
 	cout << endl << endl;
 	//system("COLOR 5");
-	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), player.prestige);
+	if (player.prestige == 0) {
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+	}
+	else {
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), player.prestige);
+	}
+
 	CenterString(welcome);
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
 	//system("COLOR 0");
