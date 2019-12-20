@@ -18,16 +18,25 @@ string LoginIntro() { //MAKE THIS PRETTIER LATER
 
 	cout << endl;
 	Title(); //displays text art
+	cout << endl << endl;
+	CenterString2("Are you an existing user?");
+	cout << "\n\n\t-'n' no (create an account)\n\t-'y' yes\n\t-'q' quit";
+	cout << "\n\n\t> ";
+	cin >> choice;
+	choice = toupper(choice);
 
-	do {
-		//cout << "\nExisting user? (y/n): ";
-		cout << endl << endl;
+	while (choice != 'Y' && choice != 'N' && choice != 'Q') {
+		system("CLS");
+
+		cout << endl;
+		Title(); //displays text art
+		cout << endl << "\tInput was invalid." << endl;
 		CenterString2("Are you an existing user?");
 		cout << "\n\n\t-'n' no (create an account)\n\t-'y' yes\n\t-'q' quit";
 		cout << "\n\n\t> ";
 		cin >> choice;
 		choice = toupper(choice);
-	} while (choice != 'Y' && choice != 'N' && choice != 'Q');
+	}
 
 	switch (choice) {
 	case 'Y':
@@ -46,6 +55,11 @@ string LoginIntro() { //MAKE THIS PRETTIER LATER
 		break;
 	}
 
+	if (username == "b" || username == "B") {
+		cout << "\n\tReturning to login....";
+		username = LoginIntro();
+	}
+
 	cout << "\nWelcome " << username << endl;
 	return username;
 
@@ -61,8 +75,12 @@ string ExistingUser() {
 	CenterString2("EXISTING USER");
 
 	cout << endl;
-	
+
+	cout << "\n\t-'b' to go back.";
+	cout << endl;
+
 	guy.setUsername(); //asks for username
+	if (guy.getUsername() == "b" || guy.getUsername() == "B") return "b"; //go back to main login
 	guy.setPassword(); //asks for password
 
 	
@@ -79,7 +97,10 @@ string ExistingUser() {
 	} */
 
 	while (!(guy.CorrectUsername('f' /*prompt if taken*/) && guy.CorrectPassword())) {
+		cout << "\n\t-'b' to go back.";
+		cout << endl;
 		guy.setUsername(); //asks for username
+		if (guy.getUsername() == "b" || guy.getUsername() == "B") return "b"; //breaks out of loop
 		guy.setPassword(); //asks for password
 	}
 
@@ -100,8 +121,10 @@ string NewUser() {
 	cout << endl;
 
 	do {
+		cout << "\n\t-'b' to go back.";
 		cout << "\n\tCreate a username: ";
 		cin >> name;
+		if (name == "b" || name == "B") return "b";
 		newguy.setUsername(name);
 	} while (!NameIsLongEnough(newguy.getUsername()) || newguy.CorrectUsername('t' /*username TAKEN?*/) || !newguy.NoSpaces());
 
@@ -170,6 +193,10 @@ bool User::CorrectUsername(char CantFindOrTaken /* 'f' or 't' */) {
 		if (User::users.size() == 0) {
 			cout << "\n\t*error* list of users is still empty.";
 		}
+	}
+
+	if (User::username == "b" || User::username == "B") {
+		return true;
 	}
 
 	for (int i = 0; i < User::users.size(); i++) { //run through users vector and check for the given username
@@ -306,7 +333,6 @@ void User::setPassword() {
 
 	cout << "\n\tpassword: ";
 	cin >> User::password;
-
 }
 
 void User::setUsername(string assignName) {

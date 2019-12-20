@@ -36,4 +36,6 @@ int main() {
 
 	-HELL YEAH, login is working! Time to find out how to do the riddles... extracting sentences from files
 	-FOUND OUT HOW TO GET FULL SENTENCES YES!!!! ok so use void FilePractice(string username) for reference
+
+	-TO-DO: implement the stats struct everywhere, fix the randomize function, make leaderboard and prestige functions
 	*/

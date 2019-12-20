@@ -1,4 +1,7 @@
 ﻿  RiddleGame.cpp
-C:\Users\Eric\OneDrive\Documents\Programming Languages 1\Login framework\Login framework\RiddleGame.cpp(404,12): warning C4244:  'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-C:\Users\Eric\OneDrive\Documents\Programming Languages 1\Login framework\Login framework\RiddleGame.cpp(76): warning C4715:  'Game': not all control paths return a value
+C:\Users\Eric\OneDrive\Documents\Programming Languages 1\Login framework\Login framework\RiddleGame.cpp(20,15): warning C4101:  'trash': unreferenced local variable
+C:\Users\Eric\OneDrive\Documents\Programming Languages 1\Login framework\Login framework\RiddleGame.cpp(410,6): warning C4101:  'level': unreferenced local variable
+C:\Users\Eric\OneDrive\Documents\Programming Languages 1\Login framework\Login framework\RiddleGame.cpp(410,13): warning C4101:  'prestige': unreferenced local variable
+C:\Users\Eric\OneDrive\Documents\Programming Languages 1\Login framework\Login framework\RiddleGame.cpp(633,12): warning C4244:  'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\Eric\OneDrive\Documents\Programming Languages 1\Login framework\Login framework\RiddleGame.cpp(112): warning C4715:  'Game': not all control paths return a value
   Login framework.vcxproj -> C:\Users\Eric\OneDrive\Documents\Programming Languages 1\Login framework\Debug\Login framework.exe

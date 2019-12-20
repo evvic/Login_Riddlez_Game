@@ -7,11 +7,16 @@
 
 using namespace std;
 
+struct stats {
+	string username;
+	int curLevel;
+	int maxLevel;
+	int prestige;
+};
+
 class Riddle {
 public:
 	char Game(int maxLevel); //returns user input of choice, after level is played
-
-
 
 	void SetQuestion(string ques);
 	void SetAnswer(string ans);
@@ -32,27 +37,28 @@ private:
 };
 
 int Game(string username);
-void StartLevel(int currLevel, int maxLevel, string username);
 char RandomizeOptions(vector<string> &fourChoices); //returns the letter the answer is equal to
 
 
-void DisplayGame(string username);
-void FilePractice(string username);
+void DisplayGame(stats plaeyr);
+//void FilePractice(stats player);
 void LoadVector(vector<Riddle>& riddles);
-int LoadProgress(string username);
-void SaveProgress(string username, int level);
+stats LoadProgress(stats player);
+//void SaveProgress(stats player);
 
-int Menu(string username, int level); //returns the level the player chooses
-bool CheckMenuOption(char option, int level, string username);
+int Menu(stats player); //returns the level the player chooses
+bool CheckMenuOption(char option, stats player);
 
 void CenterString(string s);
 void RightString(string s);
+void CenterStringStats(stats player);
 
-void UpdateScore(string username, int level);
+void UpdateScore(stats player);
+bool Prestige(stats king); //returns true if the player decided to prestige
+void Leaderboard();
 
 
 void Credits();
 char GameBeaten();
-
 
 #endif

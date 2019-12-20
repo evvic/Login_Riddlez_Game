@@ -6,6 +6,9 @@
 #include <windows.h>
 #include <stdlib.h>
 #include <time.h>
+#include <algorithm>
+#include <iomanip>
+#include <ios>
 
 
 using namespace std;
@@ -14,19 +17,40 @@ const string RIDDLE_FILE = "riddles.txt";
 const string PROGRESS = "player_progress.txt";
 
 int Game(string username) {
-	int level, currLevel;
-	DisplayGame(username);
-	char choice;
+	char choice, trash;
+	int tcurrentlvl;
 
 	vector<Riddle> riddles;
+	stats player;
+
+	player.username = username;
 
 	LoadVector(riddles);
+	player = LoadProgress(player); //returns max level user reached
+	player.curLevel = 0; //initilize curLevel
 
-	level = LoadProgress(username); //returns max level user reached
-	currLevel = Menu(username, level); //returns level player chooses to start at (must be 'unlocked')
+	DisplayGame(player);
+	tcurrentlvl = Menu(player); //returns level player chooses to start at (must be 'unlocked')
 	
-	if (currLevel >= 0) { //currLevel < 0 if player wants to quit
-		cout << "\n\nBACK IN Game()"; //checkpoint
+	//cout << "\nEntering game for the first time." << player.prestige; //checkpoint
+	//cout << "\nPlayer curlevel = " << player.curLevel; //checkpoint
+	//cin >> trash;
+
+
+
+	player = LoadProgress(player); //just incase guy prestiges in first menu
+	player.curLevel = tcurrentlvl;
+	if (player.maxLevel > 0) {
+		player.curLevel = tcurrentlvl; //prestige/current level fix
+	}
+
+	//cout << "\nPast prestige if statement.\n player.curLevel = " << player.curLevel; //checkpoint
+	//cin >> trash;
+
+	if (player.curLevel >= 0) { //currLevel < 0 if player wants to quit
+
+		//cout << "\n\nBACK IN Game()"; //checkpoint
+		//cin >> trash;
 
 		//start using the class powers
 		//make a i.e. riddles.at(i).displayQuestion and riddles.at(i).DisplayOPtionsAndAnswer
@@ -34,40 +58,52 @@ int Game(string username) {
 		//StartLevel(currLevel, level, username);
 
 		do {
-			riddles.at(currLevel).SetLevel(currLevel); //
-			choice = riddles.at(currLevel).Game(level); //starts game at current level, passes the users max level
+			riddles.at(player.curLevel).SetLevel(player.curLevel); //
+			choice = riddles.at(player.curLevel).Game(player.maxLevel); //starts game at current level, passes the users max level
+
+			//cout << "\nINSIDE do while loop, past the riddles"; //checkpoint
+			//cin >> trash;
+
 			if (choice == 'm') {
-				UpdateScore(username, level);
-				currLevel = Menu(username, level);
-				if (currLevel < 0) {
+				UpdateScore(player);
+				tcurrentlvl = Menu(player);
+
+				//cout << "Loading menu through do while loop of riddles, line 54"; //checkpoint
+				//cin >> trash;
+
+				player = LoadProgress(player); //just incase the guy prestiged
+				player.curLevel = tcurrentlvl; //prestige/current level fix
+				if (player.curLevel < 0) {
 					return 69; //quit from main menu
 				}
 			}
-			if (choice != 'f' && choice != 'm') { //if user failed the level, they do not go to the next level
-				if (currLevel >= 9) {
-					DisplayGame(username);
+			//cout << "\nexit from game back to menu, prestige: " << player.prestige; //checkpoint
+			//cin >> trash;
+			if (choice != 'f' && choice != 'm' && choice != 'q') { //if user failed the level, they do not go to the next level
+				if (player.curLevel >= 9) {
+					DisplayGame(player);
 					GameBeaten();
 				}
-				currLevel++;
+				player.curLevel++;
 			}
-			if (currLevel >= level) {
-				level = currLevel;
+			if (player.curLevel >= player.maxLevel) {
+				player.maxLevel = player.curLevel;
 			}
-			if (currLevel >= 9) {
-				DisplayGame(username);
+			if (player.curLevel >= 9) {
+				DisplayGame(player);
 				GameBeaten();
-				UpdateScore(username, level);
+				UpdateScore(player);
 				return 0; //won, game over
 			}
-		} while (choice != 'q' || currLevel > 9);
+		} while (choice != 'q' || player.curLevel > 9);
 
 
 		if (choice == 'q') {
-			UpdateScore(username, level);
+			UpdateScore(player);
 			return 1;
 		}
 
-		UpdateScore(username, level);
+		UpdateScore(player);
 
 	}
 	else {
@@ -84,35 +120,37 @@ char GameBeaten() {
 	if (trash == 'c') {
 		Credits();
 	}
+	if (trash == 'm') {
+		cout << "\nmenu?\nmaybe i'll code this later...";
+	}
 	return trash;
 }
 
-void UpdateScore(string username, int level) {
-	struct userandstats{
-		string name;
-		int score;
-	};
+void UpdateScore(stats player) {
 
 	string tname;
-	int tscore, i = 0;
+	int tscore, tprestige, i = 0;
 	bool found = false; //if stays false, then its new data to write to the file
 
-	userandstats temp;
-	vector<userandstats> list;
+	stats temp;
+	vector<stats> list;
 
 	ifstream inProg;
 	inProg.open(PROGRESS);
 
 
 	if (inProg.good()) {
-		while (inProg >> tname >> tscore) {
-			if (tname == username) {
-				tscore = level; //change the score/level that is written for the specific user
-				cout << "\n\tusername: " << tname << "\tlevel: " << tscore; //checkpoint
+		while (inProg >> tname >> tscore >> tprestige) {
+			if (tname == player.username) {
+				tscore = player.maxLevel; //change the score/level that is written for the specific user
+				tprestige = player.prestige;
+
+				//cout << "\n\tusername: " << tname << "\tlevel: " << tscore << "\tprestige: " << tprestige; //checkpoint
 				found = true; 
 			}
-			temp.name = tname;
-			temp.score = tscore;
+			temp.username = tname;
+			temp.maxLevel = tscore;
+			temp.prestige = tprestige;
 			list.push_back(temp);
 			i++;
 		}
@@ -123,22 +161,25 @@ void UpdateScore(string username, int level) {
 	inProg.close();
 
 	if (!found) {
-		temp.name = username;
-		temp.score = level;
+		temp.username = player.username;
+		temp.maxLevel = player.maxLevel;
+		temp.prestige = player.prestige;
 		list.push_back(temp);
 		i++;
 	}
 
-	for (int j = 0; j < i; j++) {
-		cout << "\nuser: " << list.at(j).name << "\tscore: " << list.at(j).score;
-	}
+	/*for (int j = 0; j < i; j++) { //checkpoint
+		cout << "\nuser: " << list.at(j).username << "\tscore: " << list.at(j).maxLevel;
+	} */
+
+	cout << endl; //leaves a space at the very end when the program terminates
 
 	ofstream oProg;
 	oProg.open(PROGRESS);
 
 	if (oProg.good()) {
 		for (int j = 0; j < i; j++) {
-			oProg << list.at(j).name << " " << list.at(j).score << endl;
+			oProg << list.at(j).username << " " << list.at(j).maxLevel << " " << list.at(j).prestige << endl;
 		}
 	}
 	else {
@@ -147,19 +188,32 @@ void UpdateScore(string username, int level) {
 	oProg.close();
 }
 
-int Menu(string username, int level) {
+int Menu(stats player) {
+
 	char option;
-	DisplayGame(username);
+	DisplayGame(player);
 	do {
-		cout << "\n\n\tMax level reached: " << level << endl;
-		cout << "\n\tEnter:\n\t -the number of the level you would like to resume between 0 - " << level << '.';
+		cout << "\n\n\tMax level reached: " << player.maxLevel << endl;
+		cout << "\n\tEnter:\n\t -the number of the level you would like to resume between 0 - " << player.maxLevel << ".\n";
 		cout << "\n\t -'q' to quit.";
 		cout << "\n\t -'c' for credits.";
-		cout << "\n\n > ";
-
+		cout << "\n\t -'s' scoreboard.";
+		if (player.maxLevel >= 9) {
+			cout << "\n\t -'p' ...to prestige.";
+		}
+		cout << "\n\n\t > ";
 		cin >> option;
-		DisplayGame(username);
-	} while (!CheckMenuOption(option, level, username));	
+		if ('p' == option || 'P' == option) {
+			//must reset maxLevel & curLevel and update prestige 
+			if (Prestige(player)) { //if true then currLevel should also be reset
+				player = LoadProgress(player);
+				player.curLevel = 0;
+				player.maxLevel = 0;
+				system("CLS");
+			}
+		}
+		DisplayGame(player);
+	} while (!CheckMenuOption(option, player));	
 
 	if (option == 'q') {
 		return -1;
@@ -213,35 +267,53 @@ void LoadVector(vector<Riddle> &riddles) {
 	//cout << endl << i + 1 << " riddles have been read and file " << RIDDLE_FILE << " has been closed."; //checkpoint
 }
 
-int LoadProgress(string username) {
+stats LoadProgress(stats player) {
 	string name;
 	int level;
+	int prestige;
+	stats temp;
+	temp.username = player.username;
+	temp.curLevel = 0; //better to initialize to 0 than to pass garbage
+	temp.maxLevel = 0;
+	temp.prestige = 0;
 
 	ifstream inProg;
 	inProg.open(PROGRESS);
 
 	if (inProg.good()) {
-		while (inProg >> name >> level) {
-			if (name == username) {
-				cout << "\n\tusername: " << name << "\tlevel: " << level; //checkpoint
+		while (inProg >> name >> level >> prestige) {
+			if (name == player.username) {
+
+				//cout << "\n\tusername: " << name << "\tlevel: " << level <<"\tprestige: " << prestige; //checkpoint
+				
 				inProg.close();
-				return level;
+				temp.prestige = prestige;
+				temp.maxLevel = level;
+				return temp;
 			}
 		}
 	}
 
 	cout << "\nCould not find saved progress, starting at level 0.";
 	inProg.close();
-	return 0;
+	temp.curLevel = 0;
+	return temp;
 }
 
-void SaveProgress(string username, int level) {
-
-}
-
-void DisplayGame(string username) {
+void DisplayGame(stats player) {
 	system("CLS");
-	string welcome = "Welcome " + username;
+	/*HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	// you can loop k higher to see more color choices
+	for (int k = 1; k < 255; k++)
+	{
+		// pick the colorattribute k you want
+		SetConsoleTextAttribute(hConsole, k);
+		cout << k << " I want to be nice today!" << endl;
+	} */
+
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), player.prestige);
+
+	string welcome = "Welcome " + player.username; //change color to simulate prestige!
 
 	//cout << "\n\t\tRiddle Quiz\n";
 	cout << endl;
@@ -262,7 +334,11 @@ void DisplayGame(string username) {
 	}
 
 	cout << endl << endl;
+	//system("COLOR 5");
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), player.prestige);
 	CenterString(welcome);
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+	//system("COLOR 0");
 	//cout << "\n\t\tWelcome " << username << endl;
 }
 
@@ -281,10 +357,10 @@ void FilePractice(string username) {
 	inRiddle.close();
 }
 
-bool CheckMenuOption(char option, int level, string username) {
-	/*allowed: c, q, 0 - level*/
+bool CheckMenuOption(char option, stats player) {
+	/*allowed: c, q, 0 - level, s, p*/
 
-	char clevel = 48 + level; //convert level to char
+	char clevel = 48 + player.maxLevel; //convert level to char
 	//cout << "\n\n\tclevel = " << clevel; //checkpoint
 
 	//int currLevel = option - 48;
@@ -293,12 +369,27 @@ bool CheckMenuOption(char option, int level, string username) {
 	case 'c':
 		Credits();
 		system("CLS");
-		DisplayGame(username);
+		DisplayGame(player);
 		//Menu(username, level);
 		return false; //'c' is a valid option but must return false to continue the loop
 		break;
 	case 'q':
 		return true;
+		break;
+	case 's':
+		Leaderboard();
+		system("CLS");
+		DisplayGame(player);
+		return false; //'s' is a valid option but must return false to continue the loop
+		break;
+	case 'p':
+		/*if (Prestige(player)) { //if true then currLevel should also be reset
+			system("CLS");
+			player = LoadProgress(player);
+			player.curLevel = 0;
+		}*/
+		DisplayGame(player);
+		return false; //'p' is a valid option but must return false to continue the loop
 		break;
 	default:
 		for (char i = '0'; i <= clevel; i++) {
@@ -315,18 +406,156 @@ bool CheckMenuOption(char option, int level, string username) {
 	return false;
 }
 
-void StartLevel(int currLevel, int maxLevel, string username) {
+void Leaderboard() {
+	int level, prestige, count = 0;
+	string name;
+	char trash;
+	system("CLS");
+	/*cout << "\n\tIn my eyes you are number one";
+	cout << "\n\t >";5
+	cin >> trash; */
 
-	cout << "\n\ncurrent level: " << currLevel << "\tmax level: " << maxLevel << "\tusername: " << username; //checkpoint
+	vector<stats> players;
+	stats temp;
+	
+	ifstream inProg;
+	inProg.open(PROGRESS);
 
+	if (inProg.good()) {
+		while (inProg >> temp.username >> temp.maxLevel >> temp.prestige) {
+			count++;
+			temp.curLevel = 0;
+			players.push_back(temp);
+		}
 
+		int i, j, key;
+		stats nkey;
+
+		for (i = 1; i < count; i++) {
+			key = players.at(i).maxLevel;
+			nkey = players.at(i);
+
+			for (j = i - 1; (j >= 0) && (players.at(j).maxLevel < key); j--) {
+				players.at(j + 1) = players.at(j);
+			}
+			players.at(j + 1).maxLevel = key;
+			players.at(j + 1) = nkey;
+		} 
+
+		cout << endl;
+		CenterString("Leaderboard");
+
+		string top = "Level     Username     Prestige";
+		cout << endl << endl;
+		CenterString(top);
+		cout << endl;
+		for (int k = 0; k < count && k < 5; k++) { //MAKE THIS FOR LOOP DISPLAY BEAUTY
+			cout << endl;
+			CenterStringStats(players.at(k));
+		}
+		cout << endl;
+
+	}
+	else {
+		cout << endl;
+		CenterString("Leaderboard");
+		cout << endl << endl;
+		CenterString("Error.");
+		cout << "\n\n\tCould not open file " << PROGRESS;
+	}
+	cout << "\n\n\tPress any key + \"enter\" to exit scoreboard.";
+	cout << "\n\n\t> ";
+	cin >> trash;
+	inProg.close();
+}
+
+void CenterStringStats(stats player) {
+
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	if (!GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
+		// an error occourred
+		cerr << "Cannot determine console size." << endl;
+	}
+	else {
+		//cout << "\n\nThe console is " << csbi.srWindow.Right - csbi.srWindow.Left << " wide." << endl; //checkpoint
+	}
+
+	int c_width = csbi.srWindow.Right - csbi.srWindow.Left;
+	int length = 22; //s.size();
+	int position = (int)((c_width - length) / 2);
+	for (int i = 0; i < position; i++) {
+		cout << ' ';
+	}
+	cout << setw(4) << setfill('.') << left << player.maxLevel << setw(14) << left << setfill(' ') << player.username;
+	cout << setw(4) << right << player.prestige;
+}
+
+bool Prestige(stats king) { //return true if player prestiged, false if not
+	bool choice = false; //assume they are smart and don't do it
+	char dontdoit;
+	system("CLS");
+	cout << endl;
+	CenterString("Prestige Menu");
+	cout << endl << endl;
+	CenterString("Congradulations " + king.username + ", you played this shitty game so much you've hit the max level.");
+	if (king.prestige > 0) {
+		cout << endl;
+		CenterString("In fact, this isn't even you're first time.");
+		cout << endl;
+		CenterString("Why are you doing this to yourself XD");
+	}
+	if (king.prestige == 5) {
+		cout << endl << endl;
+		CenterString("I'm gonna throw up, you're actually at prestige 5.");
+	}
+	else if (king.prestige > 6) {
+		cout << endl << endl;
+		CenterString("Okay, at this point you must be just changing your prestige in the file.");
+	}
+	cout << endl << endl;
+	CenterString("To prestige means to lose all progress...");
+	cout << endl;
+	CenterString("for practically nothing but to brag that you've played this game so much.");
+
+	do {
+		cout << "\n\n\tSo... would you like to prestige?\n\t-'y' yes.\n\t-'n' no, I'm sane.";
+		cout << "\n\n\t >";
+		cin >> dontdoit;
+		tolower(dontdoit);
+	} while (dontdoit != 'y' && dontdoit != 'n');
+	if (dontdoit == 'y') {
+		choice = true;
+		system("CLS");
+		cout << "deleting progress...";
+		king.curLevel = 0;
+		king.maxLevel = 0;
+		king.prestige++;
+
+		cout << endl << endl << endl << endl;
+		string well = "Congradulations " + king.username + ", you are now prestige " + to_string(king.prestige) + "!";
+		CenterString(well);
+
+		//cout << endl << king.username << " prestiged to " << king.prestige; //checkpoint
+
+		UpdateScore(king);
+		cout << "\n\n\tPress any key + \"enter\" to return to menu.";
+		cout << "\n\n\t> ";
+		cin >> dontdoit;
+	}
+	else {
+		system("CLS");
+		choice = false;
+		cout << "good choice haha";
+	}
+
+	return choice;
 
 }
 
 char Riddle::Game(int maxLevel) {
 	vector<string> fouroptions{ Riddle::answer, Riddle::options[0], Riddle::options[1], Riddle::options[2] };
 
-	char answerPos = RandomizeOptions(fouroptions);
+	char answerPos = RandomizeOptions(fouroptions); //~~~~~~~~~~~~~~~~~RANDOMIZER not working
 	char choice, trash;
 	
 	cout << "\nRiddle::Game() answer: " << Riddle::answer << "\tanswer position: " << answerPos; //checkpoint
@@ -413,9 +642,9 @@ char RandomizeOptions(vector<string>& fourChoices) {
 	fourChoices.at(answerPos) = fourChoices.at(0);
 	fourChoices.at(0) = temp;
 
-	temp = fourChoices.at(randOpt); //one more little switch
+	/* temp = fourChoices.at(randOpt); //one more little switch //~~~~~~~~~~~~~~THIS IS WHERE THE ERROR IS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	fourChoices.at(randOpt) = fourChoices.at(0);
-	fourChoices.at(0) = temp;
+	fourChoices.at(0) = temp; */
 
 	//cout << "\nRandomizeOptions(): "; //HUGE CHECKPOINT
 	/*for(int i = 0; i < 4; i++) {
@@ -442,6 +671,7 @@ void Credits() {
 
 	cout << "\n\n\tStudent at Tampere University of Applied Sciences.";
 	cout << "\n\tInternational Software Engineering Bachelor's Degree.";
+	cout << "\n\teric.brown@tuni.fi";
 	cout << "\n\n\tRiddles were copied from:\thttps://www.gotoquiz.com/can_you_guess_these_riddles";
 	cout << "\n\n\tPress any key + \"enter\" to exit credits.";
 	cout << "\n\n\t> ";

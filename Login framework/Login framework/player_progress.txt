@@ -1,5 +1,4 @@
-ewic 11
-edawg 11
-family 9
-tester 51
-bitch_boy 9
+ewic 0 2
+edawg 7 1
+tester 5 1
+lil_weezy 9 0
